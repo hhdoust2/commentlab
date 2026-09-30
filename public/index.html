@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آزمایشگاه کامنت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f7;
+    --surface: #ffffff;
+    --ink: #18212f;
+    --muted: #5b6676;
+    --rule: #d9dee5;
+    --teal: #0b7a75;
+    --teal-soft: #86bdb8;
+    --amber: #e2a12b;
+    --grey: #c5ccd6;
+    --danger: #b42318;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 16px; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Vazirmatn", Tahoma, "Segoe UI", sans-serif;
+    line-height: 1.75;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 2rem; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .lead { color: var(--muted); margin: 0 0 28px; max-width: 60ch; }
+  h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 12px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 190px;
+    resize: vertical;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font: inherit;
+    color: var(--ink);
+    background: #fbfcfd;
+    line-height: 1.7;
+  }
+  textarea:focus-visible, button:focus-visible, .chip:focus-visible, label.filebtn:focus-within {
+    outline: 3px solid rgba(11,122,117,.35);
+    outline-offset: 2px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+  .grow { flex: 1; }
+  .count { color: var(--muted); font-size: .92rem; }
+
+  button, label.filebtn {
+    font: inherit;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  button:hover, label.filebtn:hover { border-color: var(--teal); }
+  button.primary {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+    font-weight: 700;
+    padding: 9px 26px;
+  }
+  button.primary:hover { background: #096661; }
+  button:disabled { opacity: .55; cursor: wait; }
+  input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+  .keystate {
+    display: inline-block;
+    font-size: .88rem;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+  }
+  .keystate.ok { border-color: var(--teal); color: var(--teal); }
+  .keystate.no { border-color: var(--danger); color: var(--danger); }
+
+  .banner {
+    border: 1px solid var(--danger);
+    background: #fef3f2;
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: .95rem;
+  }
+  .banner.info { border-color: var(--amber); background: #fff8e6; color: #7a5300; }
+
+  /* --- نوار مسیر کامنت‌ها: تنها عنصر برجسته‌ی صفحه --- */
+  .funnel-title { font-size: 1.5rem; font-weight: 800; margin: 0 0 14px; line-height: 1.5; }
+  .funnel-title .num { color: var(--teal); }
+  .bar {
+    display: flex;
+    height: 44px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--grey);
+  }
+  .bar > div { height: 100%; min-width: 0; transition: flex-basis .5s ease; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: .92rem; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  dl.ledger { margin: 0; }
+  dl.ledger > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  dl.ledger > div:last-child { border-bottom: 0; }
+  dl.ledger dt { color: var(--muted); }
+  dl.ledger dd { margin: 0; font-weight: 700; }
+  dl.ledger .strong dd { color: var(--teal); font-size: 1.1rem; }
+  .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  .note { color: var(--muted); font-size: .88rem; margin: 12px 0 0; }
+
+  .dist { display: grid; gap: 8px; }
+  .dist-row { display: grid; grid-template-columns: 120px 1fr 56px; gap: 12px; align-items: center; font-size: .95rem; }
+  .dist-track { height: 12px; background: #eef1f4; border-radius: 3px; overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 3px; }
+  .dist-n { text-align: left; color: var(--muted); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip {
+    font: inherit;
+    font-size: .9rem;
+    padding: 3px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .chip[aria-pressed=true] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: right; font-weight: 700; color: var(--muted); font-size: .9rem; padding: 6px 10px; border-bottom: 1px solid var(--ink); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td.txt { width: 100%; word-break: break-word; }
+  .tag { display: inline-block; font-size: .82rem; font-weight: 700; padding: 0 9px; border-radius: 4px; color: #fff; white-space: nowrap; }
+  .src { color: var(--muted); font-size: .88rem; white-space: nowrap; }
+  .more { color: var(--muted); font-size: .9rem; margin-top: 10px; }
+
+  .codebox {
+    font: inherit;
+    width: 150px;
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: #fbfcfd;
+    color: var(--ink);
+    direction: ltr;
+  }
+
+  .hidden { display: none; }
+  @media (max-width: 560px) {
+    h1 { font-size: 1.6rem; }
+    .dist-row { grid-template-columns: 96px 1fr 44px; }
+    .funnel-title { font-size: 1.25rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .bar > div { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>آزمایشگاه کامنت</h1>
+  <p class="lead">کامنت‌های یک پیج را وارد کنید تا ببینید چند درصدشان بدون AI حل می‌شود، بقیه چطور دسته‌بندی می‌شوند و هر ۱۰۰۰ کامنت چقدر خرج دارد.</p>
+
+  <section class="panel" aria-labelledby="in-title">
+    <h2 id="in-title">کامنت‌ها (هر خط یک کامنت)</h2>
+    <textarea id="input" placeholder="کامنت‌ها را اینجا بچسبانید، یا فایل متنی انتخاب کنید، یا نمونه را بارگذاری کنید."></textarea>
+    <div class="row">
+      <button class="primary" id="go">تحلیل کن</button>
+      <button id="sample" type="button">بارگذاری نمونه</button>
+      <label class="filebtn">انتخاب فایل متنی<input type="file" id="file" accept=".txt,.csv,text/plain"></label>
+      <span class="count" id="count">۰ کامنت</span>
+      <span class="grow"></span>
+      <input type="password" id="code" class="codebox hidden" placeholder="کد دسترسی" autocomplete="off" aria-label="کد دسترسی">
+      <span class="keystate" id="keystate">در حال بررسی کلید…</span>
+    </div>
+  </section>
+
+  <div id="errors"></div>
+
+  <div id="results" class="hidden">
+    <section class="panel" aria-labelledby="funnel-title">
+      <p class="funnel-title" id="funnel-title"></p>
+      <div class="bar" id="bar" role="img" aria-label="سهم هر مسیر از کل کامنت‌ها"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="cost-title">
+      <h2 id="cost-title">مصرف و هزینه</h2>
+      <dl class="ledger" id="ledger"></dl>
+      <p class="note">هزینه‌ی هر ۱۰۰۰ کامنت به نوع کامنت‌های پیج بستگی دارد: پیجی که اسپم و ایموجی بیشتری دارد ارزان‌تر تمام می‌شود. قیمت مدل از فایل config.env خوانده می‌شود.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="dist-title">
+      <h2 id="dist-title">دسته‌بندی کامنت‌ها</h2>
+      <div class="dist" id="dist"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="table-title">
+      <h2 id="table-title">جدول کامنت‌ها</h2>
+      <div class="chips" id="chips"></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>دسته</th><th>کامنت</th><th>مسیر</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="more" id="more"></div>
+      <div class="row"><button id="csv" type="button">دانلود CSV</button></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const LABELS = {
+  l: { name: 'خریدار بالقوه', color: '#0b7a75' },
+  q: { name: 'سؤال', color: '#2563eb' },
+  c: { name: 'شکایت', color: '#c2410c' },
+  p: { name: 'رضایت', color: '#15803d' },
+  s: { name: 'اسپم', color: '#a16207' },
+  t: { name: 'توهین', color: '#9f1239' },
+  e: { name: 'ایموجی', color: '#64748b' },
+  m: { name: 'منشن / تگ', color: '#7c3aed' },
+  o: { name: 'سایر', color: '#475569' },
+  x: { name: 'بدون برچسب', color: '#94a3b8' }
+};
+const SOURCES = { r: 'قانون (بدون AI)', d: 'تکراری (بدون AI)', a: 'AI', n: '—' };
+const ROW_LIMIT = 300;
+
+const $ = (id) => document.getElementById(id);
+const fa = (n) => Number(n).toLocaleString('fa-IR');
+const pct = (part, total) => (total ? Math.round((part / total) * 100) : 0);
+const usd = (n) => '$' + (n < 0.01 ? n.toFixed(5) : n.toFixed(3));
+
+let lastRows = [];
+let activeFilter = 'all';
+
+function lines() {
+  return $('input').value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+}
+function updateCount() { $('count').textContent = fa(lines().length) + ' کامنت'; }
+$('input').addEventListener('input', updateCount);
+
+$('sample').addEventListener('click', async () => {
+  const r = await fetch('/sample-comments.txt');
+  $('input').value = await r.text();
+  updateCount();
+});
+
+$('file').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => { $('input').value = String(reader.result); updateCount(); };
+  reader.readAsText(f, 'utf-8');
+});
+
+$('code').value = sessionStorage.getItem('code') || '';
+$('code').addEventListener('input', () => sessionStorage.setItem('code', $('code').value));
+
+fetch('/api/config').then((r) => r.json()).then((c) => {
+  const el = $('keystate');
+  if (c.needsCode) $('code').classList.remove('hidden');
+  if (c.misconfigured) { el.textContent = 'ACCESS_CODE در تنظیمات Vercel ست نشده'; el.className = 'keystate no'; }
+  else if (c.hasKey) { el.textContent = 'کلید تنظیم شده · ' + c.model; el.className = 'keystate ok'; }
+  else { el.textContent = 'کلید OpenRouter تنظیم نشده'; el.className = 'keystate no'; }
+});
+
+function banner(text, kind) {
+  const d = document.createElement('div');
+  d.className = 'banner' + (kind ? ' ' + kind : '');
+  d.textContent = text;
+  $('errors').appendChild(d);
+}
+
+const CHUNK = 250;
+const MAX_TOTAL = 5000;
+const SUM_KEYS = ['total', 'byRule', 'byDup', 'byAI', 'unlabeled', 'uniqueSentToAI', 'requests', 'promptTokens', 'completionTokens', 'cost', 'ms'];
+
+function mergeResults(parts) {
+  const st = { byLabel: {}, model: '' };
+  SUM_KEYS.forEach((k) => { st[k] = 0; });
+  const rows = [];
+  const errs = new Set();
+  let skipped = false;
+  parts.forEach((p) => {
+    rows.push(...p.rows);
+    SUM_KEYS.forEach((k) => { st[k] += p.stats[k]; });
+    Object.keys(p.stats.byLabel).forEach((k) => { st.byLabel[k] = (st.byLabel[k] || 0) + p.stats.byLabel[k]; });
+    st.model = p.stats.model;
+    (p.aiErrors || []).forEach((m) => errs.add(m));
+    skipped = skipped || p.aiSkipped;
+  });
+  st.costPer1000 = st.total && st.requests ? (st.cost / st.total) * 1000 : null;
+  return { rows, stats: st, aiSkipped: skipped, aiErrors: [...errs] };
+}
+
+$('go').addEventListener('click', async () => {
+  let comments = lines();
+  $('errors').innerHTML = '';
+  if (!comments.length) { banner('اول کامنت‌ها را وارد کنید یا نمونه را بارگذاری کنید.'); return; }
+  if (comments.length > MAX_TOTAL) {
+    comments = comments.slice(0, MAX_TOTAL);
+    banner('فقط ' + fa(MAX_TOTAL) + ' کامنت اول تحلیل شد.', 'info');
+  }
+  const n = Math.ceil(comments.length / CHUNK);
+  const parts = [];
+  $('go').disabled = true;
+  try {
+    for (let i = 0; i < n; i++) {
+      $('go').textContent = n > 1 ? 'در حال تحلیل… (' + fa(i + 1) + ' از ' + fa(n) + ')' : 'در حال تحلیل…';
+      const headers = { 'Content-Type': 'application/json' };
+      const code = $('code').value.trim();
+      if (code) headers['x-access-code'] = code;
+      const r = await fetch('/api/analyze', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ comments: comments.slice(i * CHUNK, (i + 1) * CHUNK) })
+      });
+      let data = {};
+      try { data = await r.json(); } catch (_) { /* ignore */ }
+      if (!r.ok) throw new Error(data.error || 'خطا در تحلیل (' + r.status + ')');
+      parts.push(data);
+    }
+    render(mergeResults(parts));
+  } catch (e) {
+    banner(e.message);
+  } finally {
+    $('go').disabled = false;
+    $('go').textContent = 'تحلیل کن';
+  }
+});
+
+function render(data) {
+  const s = data.stats;
+  lastRows = data.rows;
+  activeFilter = 'all';
+
+  if (data.aiSkipped) banner('کلید OpenRouter تنظیم نشده؛ فقط قانون‌ها اجرا شدند. کامنت‌های «بدون برچسب» به AI نیاز دارند.', 'info');
+  (data.aiErrors || []).forEach((m) => banner('خطا در تماس با AI: ' + m));
+
+  const free = s.byRule + s.byDup;
+  $('funnel-title').innerHTML = '';
+  const num = document.createElement('span');
+  num.className = 'num';
+  num.textContent = fa(pct(free, s.total)) + '٪';
+  $('funnel-title').append(num, ' از ' + fa(s.total) + ' کامنت بدون هیچ توکنی حل شد');
+
+  const segs = [
+    { n: s.byRule, c: 'var(--teal)', t: 'با قانون، بدون AI' },
+    { n: s.byDup, c: 'var(--teal-soft)', t: 'تکراری، جواب کامنت مشابه' },
+    { n: s.byAI, c: 'var(--amber)', t: 'دسته‌بندی با AI' },
+    { n: s.unlabeled, c: 'var(--grey)', t: 'بدون برچسب' }
+  ];
+  $('bar').innerHTML = ''; $('legend').innerHTML = '';
+  segs.forEach((g) => {
+    if (!g.n) return;
+    const d = document.createElement('div');
+    d.style.flexBasis = (g.n / s.total * 100) + '%';
+    d.style.background = g.c;
+    d.title = g.t + ': ' + fa(g.n);
+    $('bar').appendChild(d);
+    const sp = document.createElement('span');
+    const i = document.createElement('i');
+    i.style.background = g.c;
+    sp.append(i, g.t + ' (' + fa(g.n) + ')');
+    $('legend').appendChild(sp);
+  });
+
+  const L = $('ledger'); L.innerHTML = '';
+  const add = (k, v, strong, ltr) => {
+    const row = document.createElement('div');
+    if (strong) row.className = 'strong';
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd');
+    if (ltr) { const sp = document.createElement('span'); sp.className = 'ltr'; sp.textContent = v; dd.appendChild(sp); }
+    else dd.textContent = v;
+    row.append(dt, dd); L.appendChild(row);
+  };
+  add('کل کامنت‌ها', fa(s.total));
+  add('رفته به AI (بعد از حذف تکراری‌ها)', fa(s.uniqueSentToAI));
+  add('تعداد درخواست به AI', fa(s.requests));
+  add('توکن ورودی / خروجی', fa(s.promptTokens) + ' / ' + fa(s.completionTokens));
+  add('هزینه‌ی این اجرا', usd(s.cost), false, true);
+  add('هزینه‌ی تخمینی هر ۱۰۰۰ کامنت', s.costPer1000 == null ? '—' : usd(s.costPer1000), true, s.costPer1000 != null);
+  add('مدل', s.model, false, true);
+  add('زمان اجرا', fa((s.ms / 1000).toFixed(1)) + ' ثانیه');
+
+  const D = $('dist'); D.innerHTML = '';
+  const order = Object.keys(LABELS).filter((k) => s.byLabel[k]);
+  const max = Math.max(...order.map((k) => s.byLabel[k]), 1);
+  order.forEach((k) => {
+    const row = document.createElement('div'); row.className = 'dist-row';
+    const nm = document.createElement('span'); nm.textContent = LABELS[k].name;
+    const tr = document.createElement('div'); tr.className = 'dist-track';
+    const fl = document.createElement('div'); fl.className = 'dist-fill';
+    fl.style.width = (s.byLabel[k] / max * 100) + '%'; fl.style.background = LABELS[k].color;
+    tr.appendChild(fl);
+    const n = document.createElement('span'); n.className = 'dist-n'; n.textContent = fa(s.byLabel[k]);
+    row.append(nm, tr, n); D.appendChild(row);
+  });
+
+  const C = $('chips'); C.innerHTML = '';
+  const mk = (key, text) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = text;
+    b.setAttribute('aria-pressed', key === activeFilter ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      activeFilter = key;
+      C.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      renderTable();
+    });
+    C.appendChild(b);
+  };
+  mk('all', 'همه (' + fa(s.total) + ')');
+  order.forEach((k) => mk(k, LABELS[k].name + ' (' + fa(s.byLabel[k]) + ')'));
+
+  renderTable();
+  $('results').classList.remove('hidden');
+  $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderTable() {
+  const tb = $('tbody'); tb.innerHTML = '';
+  const rows = lastRows.filter((r) => activeFilter === 'all' || (r.l || 'x') === activeFilter);
+  rows.slice(0, ROW_LIMIT).forEach((r) => {
+    const k = r.l || 'x';
+    const tr = document.createElement('tr');
+    const td1 = document.createElement('td');
+    const tag = document.createElement('span'); tag.className = 'tag';
+    tag.style.background = LABELS[k].color; tag.textContent = LABELS[k].name;
+    td1.appendChild(tag);
+    const td2 = document.createElement('td'); td2.className = 'txt'; td2.textContent = r.t;
+    const td3 = document.createElement('td'); td3.className = 'src'; td3.textContent = SOURCES[r.s];
+    tr.append(td1, td2, td3); tb.appendChild(tr);
+  });
+  $('more').textContent = rows.length > ROW_LIMIT
+    ? 'فقط ' + fa(ROW_LIMIT) + ' مورد اول از ' + fa(rows.length) + ' نمایش داده شد؛ فایل CSV همه را دارد.'
+    : '';
+}
+
+$('csv').addEventListener('click', () => {
+  const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+  const out = ['comment,label,source'].concat(
+    lastRows.map((r) => [esc(r.t), esc(LABELS[r.l || 'x'].name), esc(SOURCES[r.s])].join(','))
+  );
+  const blob = new Blob(['\ufeff' + out.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'comments-labeled.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+updateCount();
+</script>
+</body>
+</html>
