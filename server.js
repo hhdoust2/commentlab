@@ -3,9 +3,9 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { analyze } = require('./lib/pipeline');
+const { handleAnalyze, handleTest, configInfo } = require('./lib/handlers');
 
-// خواندن تنظیمات از فایل config.env (بدون نیاز به نصب هیچ پکیجی)
+// خواندن config.env (اختیاری؛ ارائه‌دهنده و کلید را می‌توانید داخل خود صفحه وارد کنید)
 function loadEnv(file) {
   if (!fs.existsSync(file)) return;
   const text = fs.readFileSync(file, 'utf8');
@@ -22,17 +22,7 @@ function loadEnv(file) {
 }
 loadEnv(path.join(__dirname, 'config.env'));
 
-const env = process.env;
-const cfg = {
-  apiKey: (env.OPENROUTER_API_KEY || '').trim(),
-  baseUrl: (env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/$/, ''),
-  model: (env.MODEL || 'google/gemini-2.5-flash-lite').trim(),
-  priceIn: Number(env.PRICE_IN_PER_M || 0.1),
-  priceOut: Number(env.PRICE_OUT_PER_M || 0.4),
-  batchSize: Math.max(5, Math.min(100, Number(env.BATCH_SIZE || 40))),
-};
-const PORT = Number(env.PORT || 3100);
-const MAX_COMMENTS = 50000;
+const PORT = Number(process.env.PORT || 3100);
 const MAX_BODY = 10 * 1024 * 1024;
 
 function send(res, status, body, type) {
@@ -50,7 +40,7 @@ function readBody(req) {
     req.on('data', (c) => {
       size += c.length;
       if (size > MAX_BODY) {
-        reject(new Error('حجم فایل بیشتر از حد مجاز است'));
+        reject(new Error('حجم درخواست بیشتر از حد مجاز است'));
         req.destroy();
         return;
       }
@@ -66,36 +56,23 @@ const server = http.createServer(async (req, res) => {
     const url = req.url.split('?')[0];
 
     if (req.method === 'GET' && url === '/') {
-      return send(
-        res,
-        200,
-        fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8'),
-        'text/html; charset=utf-8'
-      );
+      return send(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8'), 'text/html; charset=utf-8');
     }
-
     if (req.method === 'GET' && url === '/sample-comments.txt') {
-      return send(
-        res,
-        200,
-        fs.readFileSync(path.join(__dirname, 'public', 'sample-comments.txt'), 'utf8'),
-        'text/plain; charset=utf-8'
-      );
+      return send(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'sample-comments.txt'), 'utf8'), 'text/plain; charset=utf-8');
     }
-
     if (req.method === 'GET' && url === '/api/config') {
-      return send(res, 200, { hasKey: !!cfg.apiKey, model: cfg.model });
+      return send(res, 200, configInfo());
     }
-
-    if (req.method === 'POST' && url === '/api/analyze') {
-      const data = JSON.parse((await readBody(req)) || '{}');
-      let comments = Array.isArray(data.comments) ? data.comments : [];
-      comments = comments.map((c) => String(c).trim()).filter(Boolean);
-      if (!comments.length) return send(res, 400, { error: 'هیچ کامنتی ارسال نشد' });
-      if (comments.length > MAX_COMMENTS) {
-        return send(res, 400, { error: `حداکثر ${MAX_COMMENTS} کامنت در هر بار` });
+    if (req.method === 'POST' && (url === '/api/analyze' || url === '/api/test')) {
+      let body = {};
+      try {
+        body = JSON.parse((await readBody(req)) || '{}');
+      } catch (_) {
+        return send(res, 400, { error: 'درخواست نامعتبر است' });
       }
-      return send(res, 200, await analyze(comments, cfg));
+      const r = url === '/api/test' ? await handleTest(body, req.headers) : await handleAnalyze(body, req.headers);
+      return send(res, r.status, r.body);
     }
 
     send(res, 404, { error: 'not found' });
@@ -107,7 +84,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log('');
   console.log(`  آزمایشگاه کامنت آماده است:  http://localhost:${PORT}`);
-  console.log(cfg.apiKey ? `  مدل: ${cfg.model}` : '  هشدار: کلید OPENROUTER_API_KEY در config.env خالی است.');
+  console.log('  ارائه‌دهنده، مدل و کلید را داخل صفحه، بخش «تنظیمات هوش مصنوعی» وارد کنید.');
   console.log('  برای بستن برنامه: Ctrl + C');
   console.log('');
 });
