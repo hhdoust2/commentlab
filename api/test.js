@@ -1,6 +1,6 @@
 'use strict';
 
-const { handleAnalyze } = require('../lib/handlers');
+const { handleTest } = require('../lib/handlers');
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -13,6 +13,6 @@ module.exports = async (req, res) => {
       body = {};
     }
   }
-  const r = await handleAnalyze(body || {}, req.headers);
+  const r = await handleTest(body || {}, req.headers);
   return res.status(r.status).json(r.body);
 };
