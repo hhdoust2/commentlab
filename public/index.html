@@ -173,6 +173,41 @@
     direction: ltr;
   }
 
+  details.panel > summary {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.15rem;
+    list-style: none;
+  }
+  details.panel > summary::-webkit-details-marker { display: none; }
+  details.panel > summary::before { content: "◂ "; color: var(--muted); }
+  details.panel[open] > summary::before { content: "▾ "; }
+  details.panel[open] > summary { margin-bottom: 14px; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field.full { grid-column: 1 / -1; }
+  .field > span { font-size: .9rem; color: var(--muted); }
+  .inp {
+    font: inherit;
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: #fbfcfd;
+    color: var(--ink);
+  }
+  .inp.ltr-in { direction: ltr; text-align: left; }
+  .inp[readonly] { background: #eef1f4; color: var(--muted); }
+  .inp:focus-visible { outline: 3px solid rgba(11,122,117,.35); outline-offset: 2px; }
+  .keyrow { display: flex; gap: 8px; }
+  .keyrow .inp { flex: 1; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: .92rem; }
+  .testout { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: .94rem; border: 1px solid var(--rule); background: #fbfcfd; word-break: break-word; }
+  .testout.good { border-color: var(--teal); color: var(--teal); }
+  .testout.bad { border-color: var(--danger); color: var(--danger); background: #fef3f2; }
+  .testout:empty { display: none; }
+  @media (max-width: 560px) { .fields { grid-template-columns: 1fr; } }
+
   .hidden { display: none; }
   @media (max-width: 560px) {
     h1 { font-size: 1.6rem; }
@@ -186,6 +221,38 @@
 <main>
   <h1>آزمایشگاه کامنت</h1>
   <p class="lead">کامنت‌های یک پیج را وارد کنید تا ببینید چند درصدشان بدون AI حل می‌شود، بقیه چطور دسته‌بندی می‌شوند و هر ۱۰۰۰ کامنت چقدر خرج دارد.</p>
+
+  <details class="panel" id="settings">
+    <summary>تنظیمات هوش مصنوعی</summary>
+    <div class="fields">
+      <label class="field"><span>ارائه‌دهنده</span>
+        <select class="inp" id="prov"></select></label>
+      <label class="field"><span>نام مدل</span>
+        <input class="inp ltr-in" id="model" autocomplete="off" spellcheck="false"></label>
+      <label class="field full"><span>آدرس API</span>
+        <input class="inp ltr-in" id="baseurl" autocomplete="off" spellcheck="false"></label>
+      <div class="field full"><span>کلید API</span>
+        <div class="keyrow">
+          <input class="inp ltr-in" id="apikey" type="password" autocomplete="off" spellcheck="false" aria-label="کلید API">
+          <button type="button" id="showkey">نمایش</button>
+        </div>
+      </div>
+      <label class="field"><span>قیمت ورودی (دلار برای هر یک میلیون توکن)</span>
+        <input class="inp ltr-in" id="pin" inputmode="decimal" autocomplete="off" placeholder="مثلاً 0.10"></label>
+      <label class="field"><span>قیمت خروجی (دلار برای هر یک میلیون توکن)</span>
+        <input class="inp ltr-in" id="pout" inputmode="decimal" autocomplete="off" placeholder="مثلاً 0.40"></label>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="remember" checked> کلید در همین مرورگر ذخیره شود</label>
+    </div>
+    <div class="row">
+      <button class="primary" type="button" id="save">ذخیره</button>
+      <button type="button" id="test">تست اتصال</button>
+      <button type="button" id="clearkey">پاک کردن کلید</button>
+    </div>
+    <div class="testout" id="testout" role="status"></div>
+    <p class="note">تنظیمات در همین مرورگر ذخیره می‌شود و روی سرور نگه‌داری نمی‌شود. کلید فقط هنگام تحلیل از طریق سرور برنامه به ارائه‌دهنده فرستاده می‌شود. روی کامپیوتر مشترک تیک ذخیره‌ی کلید را بردارید. قیمت‌ها فقط برای نمایش هزینه است و روی کارکرد اثری ندارد.</p>
+  </details>
 
   <section class="panel" aria-labelledby="in-title">
     <h2 id="in-title">کامنت‌ها (هر خط یک کامنت)</h2>
@@ -213,7 +280,7 @@
     <section class="panel" aria-labelledby="cost-title">
       <h2 id="cost-title">مصرف و هزینه</h2>
       <dl class="ledger" id="ledger"></dl>
-      <p class="note">هزینه‌ی هر ۱۰۰۰ کامنت به نوع کامنت‌های پیج بستگی دارد: پیجی که اسپم و ایموجی بیشتری دارد ارزان‌تر تمام می‌شود. قیمت مدل از فایل config.env خوانده می‌شود.</p>
+      <p class="note">هزینه‌ی هر ۱۰۰۰ کامنت به نوع کامنت‌های پیج بستگی دارد: پیجی که اسپم و ایموجی بیشتری دارد ارزان‌تر تمام می‌شود. قیمت مدل را در تنظیمات هوش مصنوعی وارد کنید.</p>
     </section>
 
     <section class="panel" aria-labelledby="dist-title">
@@ -283,12 +350,132 @@ $('file').addEventListener('change', (e) => {
 $('code').value = sessionStorage.getItem('code') || '';
 $('code').addEventListener('input', () => sessionStorage.setItem('code', $('code').value));
 
-fetch('/api/config').then((r) => r.json()).then((c) => {
+const LS_KEY = 'cl_settings_v1';
+let SERVER = { hasKey: false, model: '', providers: [], needsCode: false, misconfigured: false };
+
+function loadSaved() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (_) { return {}; }
+}
+function currentSettings() {
+  return {
+    providerId: $('prov').value,
+    baseUrl: $('baseurl').value.trim(),
+    model: $('model').value.trim(),
+    apiKey: $('apikey').value.trim(),
+    priceIn: $('pin').value.trim(),
+    priceOut: $('pout').value.trim()
+  };
+}
+function persist() {
+  const s = currentSettings();
+  const remember = $('remember').checked;
+  const toSave = Object.assign({}, s, { remember });
+  if (!remember) toSave.apiKey = '';
+  try { localStorage.setItem(LS_KEY, JSON.stringify(toSave)); return true; } catch (_) { return false; }
+}
+function currentProvider() {
+  return SERVER.providers.find((p) => p.id === $('prov').value) || SERVER.providers[0] || { id: 'custom', baseUrl: '', modelHint: '' };
+}
+function applyProvider() {
+  const p = currentProvider();
+  const custom = p.id === 'custom';
+  $('baseurl').readOnly = !custom;
+  if (!custom) $('baseurl').value = p.baseUrl;
+  $('model').placeholder = p.modelHint || 'اسم دقیق مدل';
+  $('baseurl').placeholder = custom ? 'https://…/v1' : '';
+}
+function updateKeystate() {
   const el = $('keystate');
+  const s = currentSettings();
+  if (s.apiKey) {
+    el.textContent = 'کلید وارد شده · ' + (s.model || 'مدل انتخاب نشده');
+    el.className = s.model ? 'keystate ok' : 'keystate no';
+  } else if (SERVER.hasKey) {
+    el.textContent = 'کلید سرور · ' + SERVER.model;
+    el.className = 'keystate ok';
+  } else if (SERVER.misconfigured) {
+    el.textContent = 'کلید را در تنظیمات وارد کنید';
+    el.className = 'keystate no';
+  } else {
+    el.textContent = 'کلید در تنظیمات وارد نشده';
+    el.className = 'keystate no';
+  }
+}
+function hdrs() {
+  const h = { 'Content-Type': 'application/json' };
+  const code = $('code').value.trim();
+  if (code) h['x-access-code'] = code;
+  return h;
+}
+function showTest(text, kind) {
+  const out = $('testout');
+  out.className = 'testout' + (kind ? ' ' + kind : '');
+  out.textContent = text;
+}
+
+$('prov').addEventListener('change', () => { applyProvider(); updateKeystate(); persist(); });
+['model', 'baseurl', 'apikey', 'pin', 'pout', 'remember'].forEach((id) => {
+  $(id).addEventListener('input', updateKeystate);
+  $(id).addEventListener('change', persist);
+});
+$('showkey').addEventListener('click', () => {
+  const k = $('apikey');
+  const hide = k.type === 'password';
+  k.type = hide ? 'text' : 'password';
+  $('showkey').textContent = hide ? 'پنهان' : 'نمایش';
+});
+$('save').addEventListener('click', () => {
+  showTest(persist() ? 'تنظیمات ذخیره شد.' : 'ذخیره در مرورگر ممکن نشد (احتمالاً حالت خصوصی). تنظیمات تا بستن صفحه فعال است.', 'good');
+  updateKeystate();
+});
+$('clearkey').addEventListener('click', () => {
+  $('apikey').value = '';
+  persist();
+  updateKeystate();
+  showTest('کلید پاک شد.', 'good');
+});
+$('test').addEventListener('click', async () => {
+  showTest('در حال تست…');
+  $('test').disabled = true;
+  try {
+    const r = await fetch('/api/test', { method: 'POST', headers: hdrs(), body: JSON.stringify({ settings: currentSettings() }) });
+    let d = {};
+    try { d = await r.json(); } catch (_) { /* ignore */ }
+    if (!r.ok) throw new Error(d.error || 'خطا (' + r.status + ')');
+    if (!d.ok) { showTest(d.error || 'تست ناموفق بود.', 'bad'); return; }
+    const names = d.labels.map((l) => (l && LABELS[l] ? LABELS[l].name : '؟')).join('، ');
+    const good = d.labels.filter((l, i) => l === d.expected[i]).length;
+    showTest('اتصال برقرار است (' + fa((d.ms / 1000).toFixed(1)) + ' ثانیه). دسته‌ها: ' + names + ' — ' + fa(good) + ' از ۴ درست بود.', 'good');
+  } catch (e) {
+    showTest(e.message, 'bad');
+  } finally {
+    $('test').disabled = false;
+  }
+});
+
+fetch('/api/config').then((r) => r.json()).then((c) => {
+  SERVER = c;
+  $('prov').innerHTML = '';
+  c.providers.forEach((p) => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name;
+    $('prov').appendChild(o);
+  });
+  const saved = loadSaved();
+  if (saved.providerId && c.providers.some((p) => p.id === saved.providerId)) $('prov').value = saved.providerId;
+  $('model').value = saved.model || '';
+  $('apikey').value = saved.apiKey || '';
+  $('pin').value = saved.priceIn || '';
+  $('pout').value = saved.priceOut || '';
+  $('remember').checked = saved.remember !== false;
+  applyProvider();
+  if (saved.providerId === 'custom' && saved.baseUrl) $('baseurl').value = saved.baseUrl;
   if (c.needsCode) $('code').classList.remove('hidden');
-  if (c.misconfigured) { el.textContent = 'ACCESS_CODE در تنظیمات Vercel ست نشده'; el.className = 'keystate no'; }
-  else if (c.hasKey) { el.textContent = 'کلید تنظیم شده · ' + c.model; el.className = 'keystate ok'; }
-  else { el.textContent = 'کلید OpenRouter تنظیم نشده'; el.className = 'keystate no'; }
+  updateKeystate();
+  if (!$('apikey').value && !c.hasKey) $('settings').open = true;
+}).catch(() => {
+  $('keystate').textContent = 'ارتباط با سرور برقرار نشد';
+  $('keystate').className = 'keystate no';
 });
 
 function banner(text, kind) {
@@ -334,13 +521,10 @@ $('go').addEventListener('click', async () => {
   try {
     for (let i = 0; i < n; i++) {
       $('go').textContent = n > 1 ? 'در حال تحلیل… (' + fa(i + 1) + ' از ' + fa(n) + ')' : 'در حال تحلیل…';
-      const headers = { 'Content-Type': 'application/json' };
-      const code = $('code').value.trim();
-      if (code) headers['x-access-code'] = code;
       const r = await fetch('/api/analyze', {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ comments: comments.slice(i * CHUNK, (i + 1) * CHUNK) })
+        headers: hdrs(),
+        body: JSON.stringify({ comments: comments.slice(i * CHUNK, (i + 1) * CHUNK), settings: currentSettings() })
       });
       let data = {};
       try { data = await r.json(); } catch (_) { /* ignore */ }
@@ -361,7 +545,7 @@ function render(data) {
   lastRows = data.rows;
   activeFilter = 'all';
 
-  if (data.aiSkipped) banner('کلید OpenRouter تنظیم نشده؛ فقط قانون‌ها اجرا شدند. کامنت‌های «بدون برچسب» به AI نیاز دارند.', 'info');
+  if (data.aiSkipped) banner('کلید در «تنظیمات هوش مصنوعی» وارد نشده؛ فقط قانون‌ها اجرا شدند. کامنت‌های «بدون برچسب» به AI نیاز دارند.', 'info');
   (data.aiErrors || []).forEach((m) => banner('خطا در تماس با AI: ' + m));
 
   const free = s.byRule + s.byDup;
@@ -406,8 +590,10 @@ function render(data) {
   add('رفته به AI (بعد از حذف تکراری‌ها)', fa(s.uniqueSentToAI));
   add('تعداد درخواست به AI', fa(s.requests));
   add('توکن ورودی / خروجی', fa(s.promptTokens) + ' / ' + fa(s.completionTokens));
-  add('هزینه‌ی این اجرا', usd(s.cost), false, true);
-  add('هزینه‌ی تخمینی هر ۱۰۰۰ کامنت', s.costPer1000 == null ? '—' : usd(s.costPer1000), true, s.costPer1000 != null);
+  const noPrice = s.promptTokens > 0 && s.cost === 0;
+  add('هزینه‌ی این اجرا', noPrice ? '—' : usd(s.cost), false, !noPrice);
+  if (noPrice) add('هزینه‌ی تخمینی هر ۱۰۰۰ کامنت', 'قیمت مدل را در تنظیمات وارد کنید (یا مدل رایگان است)', true, false);
+  else add('هزینه‌ی تخمینی هر ۱۰۰۰ کامنت', s.costPer1000 == null ? '—' : usd(s.costPer1000), true, s.costPer1000 != null);
   add('مدل', s.model, false, true);
   add('زمان اجرا', fa((s.ms / 1000).toFixed(1)) + ' ثانیه');
 
